@@ -5,6 +5,10 @@
 
 https://github.com/jublonet/codebird-php
 
+The arc of the intention here is to bypass the usual js based Twitter widget (which can be a page load hog), in order to gain greater 
+control over display / layout, as well as use a WP transient to further reduce overhead. 
+
+
 =======================================================================================
 
 #### WPezClasses: Getting Started
