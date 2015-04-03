@@ -139,16 +139,36 @@ if (!class_exists('Class_WP_ezClasses_API_Twitter_Codebird')) {
 
             foreach ($arr_tweets as $key => $arr_tweet) {
                 if ( strval($key) == 'httpstatus' || strval($key) == 'rate' ) {
+
                     $arr_return[$key] = $arr_tweet;
                     continue;
                 } elseif ($key == 0) {
                     $arr_return['user'] = $arr_tweet['user'];
                 }
+				
+				// lets parse the ['text'] add links for urls, twitter handles, and #hashtags and add it as a new key
+				$arr_tweet['text_new'] = $this->parse_tweet_text($arr_tweet['text']);
+
                 $arr_return['tweets'][$key] = $arr_tweet;
             }
             return $arr_return;
         }
-
+		
+		public function parse_tweet_text( $str_to_parse = '' ){
+		
+			// TODO - strip down URL regex to only "twitter possible" links.
+		
+			$regex_uri = "/((www\.|(http|https|ftp|news|file)+\:\/\/)[_.a-zA-Z0-9-]+\.[a-zA-Z0-9\/_:@=.+?,##%&~-]*[^.|\'|\# |!|\(|?|,| |>|<|;|\)])/";
+				
+			$str_to_parse = preg_replace($regex_uri, '<a href="$1" title="Opens in a new tab" target="_blank" rel="nofollow">$1</a>', $str_to_parse);
+			$str_to_parse = str_replace('href="www', 'href="http://www', $str_to_parse);
+			
+			// Thanks to: http://granades.com/2009/04/06/using-regular-expressions-to-match-twitter-users-and-hashtags/
+			
+			$str_to_parse = preg_replace('/(^|\s)@(\w+)/', '\1@<a href="https://twitter.com/\2" target="_blank">\2</a>', $str_to_parse);
+			$str_to_parse = preg_replace('/(^|\s)#(\w+)/', '\1#<a href="https://twitter.com/search?q=%23\2" target="_blank">\2</a>', $str_to_parse);
+			
+			return $str_to_parse;
+		}
     }
-
 }
