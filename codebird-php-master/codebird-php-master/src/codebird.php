@@ -28,8 +28,8 @@ $constants = array(
     'CURLE_SSL_CRL_BADFILE' => 82,
     'CURLE_SSL_ISSUER_ERROR' => 83,
     // workaround for http://php.net/manual/en/function.curl-setopt.php#107314
-    '_CURLOPT_TIMEOUT_MS' => 155,
-    '_CURLOPT_CONNECTTIMEOUT_MS' => 156
+    'CURLOPT_TIMEOUT' => 155,
+    'CURLOPT_CONNECTTIMEOUT' => 156
 );
 foreach ($constants as $id => $i) {
     defined($id) or define($id, $i);
@@ -69,22 +69,22 @@ class Codebird
     /**
      * The API endpoint to use
      */
-    protected static $_endpoint = 'https://api.twitter.com/1.1/';
+    protected static $_endpoint = "https://api.twitter.com/1.1/";
 
     /**
      * The media API endpoint to use
      */
-    protected static $_endpoint_media = 'https://upload.twitter.com/1.1/';
+    protected static $_endpoint_media = "https://upload.twitter.com/1.1/";
 
     /**
      * The API endpoint base to use
      */
-    protected static $_endpoint_oauth = 'https://api.twitter.com/';
+    protected static $_endpoint_oauth = "https://api.twitter.com/";
 
     /**
      * The API endpoint to use for old requests
      */
-    protected static $_endpoint_old = 'https://api.twitter.com/1/';
+    protected static $_endpoint_old = "https://api.twitter.com/1/";
 
     /**
      * The Request or access token. Used to sign requests
@@ -134,7 +134,7 @@ class Codebird
     public function __construct()
     {
         // Pre-define $_use_curl depending on cURL availability
-        $this->setUseCurl(function_exists('curl_init'));
+       $this->setUseCurl(function_exists('curl_init'));
     }
 
     /**
@@ -639,6 +639,7 @@ class Codebird
         if ($screen_name) {
             $url .= "&screen_name=" . $screen_name;
         }
+
         return $url;
     }
 
@@ -676,6 +677,7 @@ class Codebird
 
     protected function _oauth2TokenCurl()
     {
+
         if (self::$_oauth_consumer_key === null) {
             throw new \Exception('To obtain a bearer token, the consumer key must be set.');
         }
@@ -705,6 +707,7 @@ class Codebird
 
         $httpstatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $reply = $this->_parseBearerReply($result, $httpstatus);
+
         return $reply;
     }
 
@@ -1218,6 +1221,7 @@ class Codebird
         } else {
             $url = self::$_endpoint . $method . '.json';
         }
+
         return $url;
     }
 
@@ -1244,6 +1248,7 @@ class Codebird
         if ($this->_use_curl) {
             return $this->_callApiCurl($httpmethod, $method, $params, $multipart, $app_only_auth, $internal);
         }
+
         return $this->_callApiNoCurl($httpmethod, $method, $params, $multipart, $app_only_auth, $internal);
     }
 
@@ -1263,36 +1268,39 @@ class Codebird
     protected function _callApiCurl(
         $httpmethod, $method, $params = array(),
         $multipart = false, $app_only_auth = false, $internal = false
-    )
+        )
     {
         list ($authorization, $url, $params, $request_headers)
             = $this->_callApiPreparations(
                 $httpmethod, $method, $params, $multipart, $app_only_auth
             );
 
-        $ch                = curl_init($url);
-        $request_headers[] = 'Authorization: ' . $authorization;
-        $request_headers[] = 'Expect:';
+        $ch                = curl_init();
+        $request_headers[] = "Accept: application/json";
+        $request_headers[] = "Authorization:" . $authorization;
+        $request_headers[] = "Expect:";
 
         if ($httpmethod !== 'GET') {
-            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
         }
-
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
-        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_setopt($ch, CURLOPT_HEADER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $request_headers);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-        curl_setopt($ch, CURLOPT_CAINFO, __DIR__ . '/cacert.pem');
+        curl_setopt($ch, CURLOPT_CAINFO, __DIR__ . DIRECTORY_SEPARATOR . "cacert.pem");
+        curl_setopt($ch, CURLOPT_CAPATH, __DIR__);
+
 
         if (isset($this->_timeout)) {
-            curl_setopt($ch, _CURLOPT_TIMEOUT_MS, $this->_timeout);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $this->_timeout);
         }
 
         if (isset($this->_connectionTimeout)) {
-            curl_setopt($ch, _CURLOPT_CONNECTTIMEOUT_MS, $this->_connectionTimeout);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->_connectionTimeout);
         }
 
         $result = curl_exec($ch);
@@ -1316,6 +1324,7 @@ class Codebird
                 $reply->rate       = $rate;
                 break;
         }
+        curl_close($ch);
         return $reply;
     }
 
@@ -1564,5 +1573,3 @@ class Codebird
         return $parsed;
     }
 }
-
-?>

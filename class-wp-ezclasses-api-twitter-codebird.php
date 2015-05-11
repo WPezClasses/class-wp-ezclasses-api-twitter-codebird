@@ -132,7 +132,6 @@ if (!class_exists('Class_WP_ezClasses_API_Twitter_Codebird')) {
          */
         public function latest_tweets($obj_tweets)
         {
-
             $arr_tweets = (array)$obj_tweets;
 
             $arr_return = array();
